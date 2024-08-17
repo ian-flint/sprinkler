@@ -10,3 +10,13 @@ tr {
 .toptd {
     border-top: 2px solid black;
 }
+
+#flash {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: green;
+    height: 100%;
+    width: 100%;
+    visibility: hidden;
+}

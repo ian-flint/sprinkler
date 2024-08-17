@@ -30,19 +30,35 @@ $(document).ready(()=>{
      $(".stop").click(doStop);
 });
 
+var activeTimeout = 0;
+
 function doStart() {
      var id = $(this).parent().parent().attr("id");
      var time = $(this).val();
      if (time == "") {
          time = 1;
      }
+     if (activeTimeout > 0) {
+         clearTimeout (activeTimeout);
+         activeTimeout = 0;
+     }
+     $("body").css("background-color", "lightgreen");
      $.ajax({
          type: "get",
          url:  "/api/runone",
          data: {"id": id, "time": time}
-         });
+         })
+     activeTimeout = setTimeout(()=>{
+         $("body").css("background-color", "white");
+         activeTimeout = 0;
+     }, int(time) * 1000);
 }
 function doStop() {
+     if (activeTimeout > 0) {
+         clearTimeout (activeTimeout);
+         activeTimeout = 0;
+     }
+     $("body").css("background-color", "white");
      $.ajax({
          type: "get",
          url:  "/api/stop",
