@@ -11,9 +11,6 @@ zoneList = {
     10: {"name": "Rear Far Sprays"},
     11: {"name": "Hillside Trees (green)"},
     12: {"name": "Rear Right Redwoods (blue)"},
-    13: {"name": "Hose"},
-    14: {"name": "Unused"},
-    15: {"name": "Unused"},
     16: {"name": "Front Spray by House"},
     17: {"name": "Front Right Spray"},
     18: {"name": "Front Parkway Spray"},
@@ -51,7 +48,7 @@ function doStart() {
      activeTimeout = setTimeout(()=>{
          $("body").css("background-color", "white");
          activeTimeout = 0;
-     }, int(time) * 1000);
+     }, time * 60 * 1000);
 }
 function doStop() {
      if (activeTimeout > 0) {
