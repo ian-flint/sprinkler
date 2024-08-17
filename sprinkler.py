@@ -20,7 +20,6 @@ signal.signal(signal.SIGINT, signal_handler)
 logging.basicConfig(level=logging.INFO)
 
 controller = RainbirdController(
-    "IP", "Password"
 )
 
 PORT = 3000
