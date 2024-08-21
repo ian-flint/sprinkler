@@ -1,57 +1,55 @@
 #!/usr/bin/python3
 
-from pyrainbird import RainbirdController
-import http.server
-import socketserver
-import os
+from bottle import route, run, static_file, request
+import threading
+import time
+from persistence import SprinklerData
 import logging
-from urllib.parse import urlparse
-from urllib.parse import parse_qs
-import sys
-import signal
 
-def signal_handler(sig, frame):
-    print('Cleaning up')
-    httpd.server_close()
-    sys.exit(0)
+sd = SprinklerData()
 
-signal.signal(signal.SIGINT, signal_handler)
-
-logging.basicConfig(level=logging.INFO)
-
-controller = RainbirdController(
-    os.environ["RAINBIRD_SERVER"], os.environ["RAINBIRD_PASSWORD"]
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+formatter = logging.Formatter(
+    "%(asctime)s - %(levelname)s - %(message)s"
 )
+ch.setFormatter(formatter)
+logger.addHandler(ch)
 
-PORT = 3000
+def poll ():
+    while True:
+        sd.poll()
+        time.sleep(1)
 
-os.chdir ("public")
+@route ("/api/runone")
+def runone ():
+    logger.info ("Running one: ID=%s, Time=%s, TS=%s"%(request.query.id, request.query.time, request.query.ts))
+    sd.runNow (int(request.query.id), int(request.query.time))
+    return ("Ok")
 
-def runone (query):
-    logging.info ("Running one: %s"%query)
-    print("%s\n" % controller.irrigate_zone(int(query["id"][0]), int(query["time"][0])))
-    return
+@route ("/api/stop")
+def stop ():
+    logger.info ("Stopping current: TS=%s"%request.query.ts)
+    sd.next ()
+    return ("Ok")
 
-def stop (query):
-    logging.info ("Stopping all")
-    print("%s\n" % controller.stop_irrigation())
-    return
+@route ("/api/enqueue")
+def enqueue ():
+    logger.info ("Enqueuing zone: ID=%s, Time=%s"%(request.query.id, request.query.time))
+    sd.enqueue (int(request.query.id), int(request.query.time), True)
+    return ("Ok")
 
-class myHandler (http.server.SimpleHTTPRequestHandler):
-    def do_GET(self):
-        parsed = urlparse(self.path)
-        query = parse_qs(parsed.query)
-        path = parsed.path
-        if path == "/api/runone":
-            runone(query)
-        elif path == "/api/stop":
-            stop(query)
-        else:
-            http.server.SimpleHTTPRequestHandler.do_GET(self)
+@route ("/")
+def serve_static():
+    return static_file("index.html", root="public")
 
-Handler = myHandler
+@route ("/<filepath:path>")
+def serve_static(filepath):
+    return static_file(filepath, root="public")
 
-httpd = socketserver.TCPServer(("", PORT), Handler)
-print("serving at port", PORT)
-httpd.serve_forever()
+t = threading.Thread(target=poll, daemon=True)
+t.start()
+
+run(host='10.0.0.241', port=8080, debug=True)
 

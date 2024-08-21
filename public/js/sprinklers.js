@@ -43,7 +43,7 @@ function doStart() {
      $.ajax({
          type: "get",
          url:  "/api/runone",
-         data: {"id": id, "time": time}
+         data: {"id": id, "time": time, "ts": Date.now()}
          })
      activeTimeout = setTimeout(()=>{
          $("body").css("background-color", "white");
@@ -59,6 +59,7 @@ function doStop() {
      $.ajax({
          type: "get",
          url:  "/api/stop",
+         data: {"ts": Date.now()}
          });
 }
 

@@ -1,0 +1,2 @@
+export RAINBIRD_SERVER=<IP>
+export RAINBIRD_PASSWORD=<Password>
