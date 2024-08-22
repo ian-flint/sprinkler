@@ -2,11 +2,11 @@
 0 5 * * 1,4 /usr/bin/curl "http://10.0.0.241:8080/api/enqueue?id=1&time=1"
 # Left Rear Garden Box twice per week on Monday and Thursday
 0 5 * * 1,4 /usr/bin/curl "http://10.0.0.241:8080/api/enqueue?id=2&time=30"
-# Veg and Berm once per week on Monday
-0 5 * * 1 /usr/bin/curl "http://10.0.0.241:8080/api/enqueue?id=4&time=30"
+# Veg and Berm once per week on Thursday
+0 5 * * 4 /usr/bin/curl "http://10.0.0.241:8080/api/enqueue?id=4&time=30"
 # Rose Garden twice per week on Monday and Thursday
 0 5 * * 1,4 /usr/bin/curl "http://10.0.0.241:8080/api/enqueue?id=8&time=30"
-# Left redwoods once per week on Monday
-0 5 * * 1 /usr/bin/curl "http://10.0.0.241:8080/api/enqueue?id=9&time=30"
-# Right redwoods once per week on Monday
-0 5 * * 1 /usr/bin/curl "http://10.0.0.241:8080/api/enqueue?id=12&time=30"
+# Left redwoods once per week on Thursday
+0 5 * * 4 /usr/bin/curl "http://10.0.0.241:8080/api/enqueue?id=9&time=30"
+# Right redwoods once per week on Thursday
+0 5 * * 4 /usr/bin/curl "http://10.0.0.241:8080/api/enqueue?id=12&time=30"

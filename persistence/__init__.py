@@ -20,8 +20,6 @@ class SprinklerData:
     def __init__ (self):
         self.queue = []
         self.running = None
-#        self.enqueue (1, 1, True)
-#        self.enqueue (2, 1, True)
 
     def enqueue (self, station, duration, resumeIfInterrupted):
         logger.info ("Enqueuing station %d for duration %d, resume %s"%(station, duration, resumeIfInterrupted))
@@ -57,7 +55,7 @@ class SprinklerData:
                 seconds = int(end - now)
                 minutes = int(seconds / 60)
                 seconds = seconds % 60
-                if (seconds % 10 == 0):
+                if (seconds % 60 == 0):
                     logger.info ("Station %d running - %d:%02d remaining"%(station, minutes, seconds))
                 
         if not self.running:
