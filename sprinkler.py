@@ -3,6 +3,7 @@
 from bottle import route, run, static_file, request
 import threading
 import time
+import json
 from persistence import SprinklerData
 import logging
 
@@ -39,6 +40,20 @@ def enqueue ():
     logger.info ("Enqueuing zone: ID=%s, Time=%s"%(request.query.id, request.query.time))
     sd.enqueue (int(request.query.id), int(request.query.time), True)
     return ("Ok")
+
+@route ("/api/getschedule")
+def getschedule ():
+    obj = []
+    with open ("schedule.cron", "r") as f:
+        for line in f:
+            if line.find("api/enqueue") < 0:
+                continue
+            fields = line.strip().split()
+            fields.pop(5)
+            url = fields.pop(5).strip('"')
+            fields += [pair.split("=")[1] for pair in url.split("?")[1].split("&")]
+            obj.append(fields)
+    return (json.dumps(obj))
 
 @route ("/")
 def serve_static():

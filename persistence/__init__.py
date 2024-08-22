@@ -65,5 +65,6 @@ class SprinklerData:
                 minutes = int(seconds / 60)
                 seconds = seconds % 60
                 logger.info ("Starting station %d for %d:%02d minutes, resume: %s"%(next[0], minutes, seconds, next[2]))
+                logger.info("%s\n" % controller.stop_irrigation())
                 logger.info("%s\n" % controller.irrigate_zone(next[0], minutes))
                 self.running = [next[0], now + (60 * next[1]), next[2]]

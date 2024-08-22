@@ -7,6 +7,11 @@ tr {
     font-weight: 700;
 }
 
+.stop {
+    font-size: 20;
+    font-weight: 700;
+}
+
 .toptd {
     border-top: 2px solid black;
 }
