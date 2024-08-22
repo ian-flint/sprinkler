@@ -22,6 +22,21 @@ zoneList = {
     24: {"name": "Unused"},
 };
 
+wdayList = {
+    0: {"name": "Sunday"},
+    1: {"name": "Monday"},
+    2: {"name": "Tuesday"},
+    3: {"name": "Wednesday"},
+    4: {"name": "Thursday"},
+    5: {"name": "Friday"},
+    6: {"name": "Saturday"},
+};
+
+selectChoices = {
+    "zone": zoneList,
+    "wday": wdayList,
+}
+
 $(document).ready(()=>{
    $("#controls").tabs({
                     activate: (event, ui) => {
@@ -86,9 +101,9 @@ function showWaterNow() {
      tr = $("<tr>");
      tr.append($("<th>").html("Zone"));
      t.append (tr);
-     var keylist = Object.keys(zoneList).sort((a, b) => {return a - b});
-     for (var ix in keylist) {
-        var key = keylist[ix];
+     var keyList = Object.keys(zoneList).sort((a, b) => {return a - b});
+     for (var ix in keyList) {
+        var key = keyList[ix];
         tr = $("<tr>");
         tr.append($("<td class=toptd>").html(key + ": " + zoneList[key].name));
         t.append (tr);
@@ -122,9 +137,7 @@ function showSchedule() {
             tr = $("<tr>");
             tr.append($("<th>").html("Min"));
             tr.append($("<th>").html("Hour"));
-            tr.append($("<th>").html("Mday"));
-            tr.append($("<th>").html("Mon"));
-            tr.append($("<th>").html("Wday"));
+            tr.append($("<th>").html("Weekday"));
             tr.append($("<th>").html("Zone"));
             tr.append($("<th>").html("Time"));
             t.append (tr);
@@ -132,7 +145,13 @@ function showSchedule() {
                 var data = obj[ix];
                 tr = $("<tr>");
                 for (var jx in data) {
+                    if ((jx == 2) || (jx == 3)) {
+                        continue;
+                    }
                     td = $("<td>").append(data[jx]);
+                    if (jx == 4) {
+                        td.attr("class", "wday");
+                    }
                     if (jx == 5) {
                         td.attr("class", "zone");
                     }
@@ -204,12 +223,14 @@ function makeEditable() {
     var text = $(this).html();
     var width = $(this).css("width");
     $(this).html("").data("originalText", text);
-    if ($(this).attr("class") == "zone") {
+    var cellClass = $(this).attr("class");
+    if (cellClass in selectChoices) {
+        var listObj = selectChoices[cellClass];
         var select = $("<select>");
-        var keylist = Object.keys(zoneList).sort((a, b) => {return a - b});
-        for (var ix in keylist) {
-            var key = keylist[ix];
-            var option = $("<option>").attr("value", key).text(key + ": " + zoneList[key].name);
+        var keyList = Object.keys(listObj).sort((a, b) => {return a - b});
+        for (var ix in keyList) {
+            var key = keyList[ix];
+            var option = $("<option>").attr("value", key).text(key + ": " + listObj[key].name);
             if (key == text) {
                 option.attr ("selected", true);
             }
@@ -222,8 +243,14 @@ function makeEditable() {
 }
 
 function makeUneditable() {
-    var text = $(this).children("input").val();
-    $(this).html(text);
+    var cellClass = $(this).attr("class");
+    if (cellClass in selectChoices) {
+        var text = $(this).children("select").val();
+        $(this).html(text);
+    } else {
+        var text = $(this).children("input").val();
+        $(this).html(text);
+    }
 }
 
 function rollback() {
