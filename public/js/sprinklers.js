@@ -125,6 +125,7 @@ function showWaterNow() {
 }
 
 function saveSchedule() {
+    $(".editing").each(makeUneditable);
     var t = $(this).siblings("table");
     var output = "";
     t.children().each((ix, tr) => {
@@ -208,7 +209,7 @@ function showSchedule() {
                     if ((jx == 1) || (jx == 2) || (jx == 3)) {
                         continue;
                     }
-                    td = $("<td>");
+                    td = $("<td>").on("click", makeEditable);
                     td.data("value", (data[jx]));
                     td.data("index", jx);
                     if (jx == 0) {
@@ -226,7 +227,8 @@ function showSchedule() {
                     tr.append(td);
                 }
                 tr.append($("<td>").attr("id", "saveCancel")
-                                .append($('<img src="images/edit.svg">').on("click", editSchedule)));
+                                .append($('<img src="images/trash.svg">').on("click", deleteSchedule)))
+                                .append($("<image src=images/check.svg>").on("click", () => {$(".editing").each(makeUneditable)}));
                 t.append(tr);
             };
             t.append($("<tr>").append($("<td>").append($("<img src=images/plus.svg>").on("click", addSchedule))));
@@ -267,17 +269,13 @@ function deleteSchedule() {
 
 function addSchedule() {
     var tr = $("<tr>").attr("class", "dataLine");
-    tr.append($("<td class=time>").html("5:00 AM").data("value", "5:00 AM").data("index", "0"));
-    tr.append($("<td class=wday>").html("1").data("value", "1").data("index", "4"));
-    tr.append($("<td class=zone>").html("").data("value", "").data("index", "5"));
-    tr.append($("<td>").html("10").data("value", "10").data("index", "6"));
+    tr.append($("<td class=time>").html("-").data("value", "5:00 AM").data("index", "0").on("click", makeEditable));
+    tr.append($("<td class=wday>").html("-").data("value", "1").data("index", "4").on("click", makeEditable));
+    tr.append($("<td class=zone>").html("-").data("value", "").data("index", "5").on("click", makeEditable));
+    tr.append($("<td>").html("-").data("value", "").data("index", "6").on("click", makeEditable));
     tr.append($("<td>").attr("id", "saveCancel")
-          .append($('<img src="images/edit.svg">').on("click", editSchedule)));
+                       .append($('<img src="images/trash.svg">').on("click", deleteSchedule)));
     $(this).parent().parent().before(tr);
-    tr.children(":not(#saveCancel)").each(makeEditable)
-    tr.children("#saveCancel").html("")
-        .append($('<img src="images/check.svg">').on("click", updateSchedule))
-        .append($('<img src="images/x.svg">').on("click", removeNewSchedule))
 }
 
 function removeNewSchedule() {
@@ -285,6 +283,9 @@ function removeNewSchedule() {
 }
 
 function makeEditable() {
+    $(".editing").each(makeUneditable);
+    $(this).off("click");
+    $(this).on("keypress", keyPress);
     var text = $(this).html();
     var value = $(this).data("value");
     var width = $(this).css("width");
@@ -319,18 +320,30 @@ function makeEditable() {
     } else {
         $(this).append($("<input type=text>").attr("value", text).css("width", width));
     }
+    $(this).addClass("editing");
+}
+
+function keyPress(event) {
+    if (event.which == 27) {
+        $(".editing").each(makeUneditable);
+    }
 }
 
 function makeUneditable() {
-    var cellClass = $(this).attr("class");
-    if (cellClass in selectChoices) {
-        var value = $(this).children("select").val();
+    $(this).on("click", makeEditable);
+    $(this).off("keypress");
+    var select = $(this).children("select");
+    if (select.val()) {
+        var value = select.val();
+        $(this).removeClass("editing");
+        var cellClass = $(this).attr("class");
         $(this).data("value", value);
         $(this).html(selectChoices[cellClass][value].name);
     } else {
         var text = $(this).children("input").val();
         $(this).data("value", text);
         $(this).html(text);
+        $(this).removeClass("editing");
     }
 }
 
