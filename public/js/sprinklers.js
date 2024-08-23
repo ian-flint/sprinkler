@@ -124,6 +124,37 @@ function showWaterNow() {
      $(".stop").on("click", doStop);
 }
 
+function saveSchedule() {
+    var t = $(this).siblings("table");
+    var output = "";
+    t.children().each((ix, tr) => {
+        var array = ["", "", "*", "*", "", "", ""];
+        if ($(tr).attr("class") == "dataLine") {
+            var zone = "";
+            var day = "";
+            $(tr).children().each((ix, td) => {
+                array[$(td).data("index")] = $(td).data("value");
+                if (ix == 2) {
+                    day = $(td).html();
+                } else if (ix == 3) {
+                    zone = $(td).html();
+                }
+            });
+            output += "# " + zone + " on " + day + "\n";
+            output += array.join(" ");
+            output += "\n";
+        }
+    });
+    $.ajax({
+         type: "post",
+         url: "/api/saveschedule",
+         data: output
+    }).done(() => {
+         alert ("Schedule Saved");
+         showSchedule();
+    });
+}
+
 function showSchedule() {
      $.ajax({
          type: "get",
@@ -131,6 +162,9 @@ function showSchedule() {
          }).done((json) => {
             obj = JSON.parse(json);
             $("#schedule_list").html("");
+            $("#schedule_list")
+                .append($("<image src=images/save.svg>").on("click", saveSchedule))
+                .append($("<image src=images/rotate-ccw.svg>").on("click", showSchedule));
             $("#schedule_list").append($("<p>"));
             t = $("<table>");
             $("#schedule_list").append(t);
@@ -139,21 +173,27 @@ function showSchedule() {
             tr.append($("<th>").html("Hour"));
             tr.append($("<th>").html("Weekday"));
             tr.append($("<th>").html("Zone"));
-            tr.append($("<th>").html("Time"));
+            tr.append($("<th>").html("Duration"));
             t.append (tr);
             for (var ix in obj) {
                 var data = obj[ix];
                 tr = $("<tr>");
+                tr.attr("class", "dataLine")
                 for (var jx in data) {
                     if ((jx == 2) || (jx == 3)) {
                         continue;
                     }
-                    td = $("<td>").append(data[jx]);
+                    td = $("<td>");
+                    td.data("value", (data[jx]));
+                    td.data("index", jx);
                     if (jx == 4) {
                         td.attr("class", "wday");
-                    }
-                    if (jx == 5) {
+                        td.html(wdayList[data[jx]].name);
+                    } else if (jx == 5) {
                         td.attr("class", "zone");
+                        td.html(zoneList[data[jx]].name);
+                    } else {
+                        td.html(data[jx]);
                     }
                     tr.append(td);
                 }
@@ -198,14 +238,12 @@ function deleteSchedule() {
 }
 
 function addSchedule() {
-    var tr = $("<tr>");
-    tr.append($("<td>").html("0"));
-    tr.append($("<td>").html("5"));
-    tr.append($("<td>").html("*"));
-    tr.append($("<td class=month>").html("*"));
-    tr.append($("<td class=wday>").html("1"));
-    tr.append($("<td class=zone>").html(""));
-    tr.append($("<td>").html("10"));
+    var tr = $("<tr>").attr("class", "dataLine");
+    tr.append($("<td>").html("0").data("value", "0").data("index", "0"));
+    tr.append($("<td>").html("5").data("value", "5").data("index", "1"));
+    tr.append($("<td class=wday>").html("1").data("value", "1").data("index", "4"));
+    tr.append($("<td class=zone>").html("").data("value", "").data("index", "5"));
+    tr.append($("<td>").html("10").data("value", "10").data("index", "6"));
     tr.append($("<td>").attr("id", "saveCancel")
           .append($('<img src="images/edit.svg">').on("click", editSchedule)));
     $(this).parent().parent().before(tr);
@@ -221,9 +259,10 @@ function removeNewSchedule() {
 
 function makeEditable() {
     var text = $(this).html();
+    var value = $(this).data("value");
     var width = $(this).css("width");
-    $(this).html("").data("originalText", text);
     var cellClass = $(this).attr("class");
+    $(this).html("");
     if (cellClass in selectChoices) {
         var listObj = selectChoices[cellClass];
         var select = $("<select>");
@@ -231,7 +270,7 @@ function makeEditable() {
         for (var ix in keyList) {
             var key = keyList[ix];
             var option = $("<option>").attr("value", key).text(key + ": " + listObj[key].name);
-            if (key == text) {
+            if (key == value) {
                 option.attr ("selected", true);
             }
             select.append(option);
@@ -245,15 +284,22 @@ function makeEditable() {
 function makeUneditable() {
     var cellClass = $(this).attr("class");
     if (cellClass in selectChoices) {
-        var text = $(this).children("select").val();
-        $(this).html(text);
+        var value = $(this).children("select").val();
+        $(this).data("value", value);
+        $(this).html(selectChoices[cellClass][value].name);
     } else {
         var text = $(this).children("input").val();
+        $(this).data("value", text);
         $(this).html(text);
     }
 }
 
 function rollback() {
-    var text = $(this).data("originalText");
-    $(this).html(text);
+    var value = $(this).data("value");
+    var cellClass = $(this).attr("class");
+    if (cellClass in selectChoices) {
+        $(this).html(selectChoices[cellClass][value].name);
+    } else {
+        $(this).html(value);
+    }
 }

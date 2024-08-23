@@ -1,11 +1,12 @@
 #!/usr/bin/python3
 
-from bottle import route, run, static_file, request
+from bottle import route, run, static_file, request, post
 import threading
 import time
 import json
 from persistence import SprinklerData
 import logging
+import os
 
 sd = SprinklerData()
 
@@ -40,6 +41,25 @@ def enqueue ():
     logger.info ("Enqueuing zone: ID=%s, Time=%s"%(request.query.id, request.query.time))
     sd.enqueue (int(request.query.id), int(request.query.time), True)
     return ("Ok")
+
+@post ("/api/saveschedule")
+def saveschedule():
+    lines = request.body.read().decode("utf-8").split("\n")
+    with open("schedule.cron", "w") as f:
+        for line in lines:
+#            print ("%s\n"%line)
+            if line.find ("#") == 0: # comment line
+                f.write ("#SPRINKLER %s\n"%line)
+            else:
+                fields = line.split()
+                if len(fields) < 6:
+                    continue
+                selFields = [int(x) for x in fields[:2] + fields[4:]]
+#                print (selFields)
+                f.write ("%d %d * * %d /usr/bin/curl \"http://10.0.0.241:8080/api/enqueue?id=%d&time=%d\"\n"%tuple(selFields))
+    os.system ("/usr/bin/crontab -l | grep -v SPRINKLER | grep -v enqueue >> schedule.cron")
+    os.system ("crontab schedule.cron")
+    return ("OK")
 
 @route ("/api/getschedule")
 def getschedule ():
