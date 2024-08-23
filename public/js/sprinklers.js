@@ -267,8 +267,7 @@ function deleteSchedule() {
 
 function addSchedule() {
     var tr = $("<tr>").attr("class", "dataLine");
-    tr.append($("<td>").html("0").data("value", "0").data("index", "0"));
-    tr.append($("<td>").html("5").data("value", "5").data("index", "1"));
+    tr.append($("<td class=time>").html("5:00 AM").data("value", "5:00 AM").data("index", "0"));
     tr.append($("<td class=wday>").html("1").data("value", "1").data("index", "4"));
     tr.append($("<td class=zone>").html("").data("value", "").data("index", "5"));
     tr.append($("<td>").html("10").data("value", "10").data("index", "6"));
