@@ -44,6 +44,8 @@ def enqueue ():
 
 @post ("/api/saveschedule")
 def saveschedule():
+#    print (request.body.read().decode("utf-8"))
+#    return ("OK")
     lines = request.body.read().decode("utf-8").split("\n")
     with open("schedule.cron", "w") as f:
         for line in lines:

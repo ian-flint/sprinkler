@@ -16,3 +16,6 @@ tr {
     border-top: 2px solid black;
 }
 
+div#controls {
+    min-width: max-content;
+}

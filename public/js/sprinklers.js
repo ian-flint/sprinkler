@@ -133,10 +133,24 @@ function saveSchedule() {
             var zone = "";
             var day = "";
             $(tr).children().each((ix, td) => {
-                array[$(td).data("index")] = $(td).data("value");
-                if (ix == 2) {
+                if ($(td).data("index") == 0) {
+                    fields = $(td).data("value").split(/[: ]/);
+                    fields[0] = parseInt (fields[0]);
+                    fields[1] = parseInt (fields[1]);
+                    if (fields[0] == 12) {
+                        fields[0] = 0;
+                    }
+                    if (fields[2] == 'PM') {
+                        fields[0] += 12;
+                    }
+                    array[0] = fields[1];
+                    array[1] = fields[0];
+                } else {
+                    array[$(td).data("index")] = $(td).data("value");
+                }
+                if (ix == 1) {
                     day = $(td).html();
-                } else if (ix == 3) {
+                } else if (ix == 2) {
                     zone = $(td).html();
                 }
             });
@@ -169,8 +183,7 @@ function showSchedule() {
             t = $("<table>");
             $("#schedule_list").append(t);
             tr = $("<tr>");
-            tr.append($("<th>").html("Min"));
-            tr.append($("<th>").html("Hour"));
+            tr.append($("<th>").html("Start Time"));
             tr.append($("<th>").html("Weekday"));
             tr.append($("<th>").html("Zone"));
             tr.append($("<th>").html("Duration"));
@@ -179,14 +192,29 @@ function showSchedule() {
                 var data = obj[ix];
                 tr = $("<tr>");
                 tr.attr("class", "dataLine")
+                hour = data[1];
+                minute = data[0];
+                ampm = "AM";
+                if (hour == 0) {
+                    hour = 12;
+                } else if (hour == 12) {
+                    ampm = "PM";
+                } else if (hour > 12) {
+                    hour -= 12;
+                    ampm = "PM";
+                }
+                data[0] = hour + ":" + minute.padStart(2, "0") + " " + ampm;
                 for (var jx in data) {
-                    if ((jx == 2) || (jx == 3)) {
+                    if ((jx == 1) || (jx == 2) || (jx == 3)) {
                         continue;
                     }
                     td = $("<td>");
                     td.data("value", (data[jx]));
                     td.data("index", jx);
-                    if (jx == 4) {
+                    if (jx == 0) {
+                        td.attr("class", "time");
+                        td.html(data[jx]);
+                    } else if (jx == 4) {
                         td.attr("class", "wday");
                         td.html(wdayList[data[jx]].name);
                     } else if (jx == 5) {
@@ -276,6 +304,19 @@ function makeEditable() {
             select.append(option);
         }
         $(this).append(select);
+    } else if (cellClass == "time") {
+        var i = $("<input type=text>").attr("value", text).css("width", width).timepicker({
+            timeFormat: 'h:mm p',
+            interval: 15,
+            minTime: '4:00am',
+            maxTime: '11:00pm',
+            defaultTime: $(this).data("value"),
+            startTime: '4:00am',
+            dynamic: false,
+            dropdown: true,
+            scrollbar: true
+        });
+        $(this).append(i);
     } else {
         $(this).append($("<input type=text>").attr("value", text).css("width", width));
     }
