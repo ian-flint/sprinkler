@@ -19,6 +19,14 @@ formatter = logging.Formatter(
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
+@route ("/api/getlog")
+def getLog ():
+    with open("sprinkler.log", 'r') as f:
+        blob = f.read().split("\n")
+        if len(blob) > 40:
+            blob = blob[-40:]
+        return ("<br>".join(blob))
+
 def poll ():
     while True:
         sd.poll()
@@ -84,6 +92,10 @@ def serve_static():
 @route ("/<filepath:path>")
 def serve_static(filepath):
     return static_file(filepath, root="public")
+
+@route ("/api/fetchweather")
+def fetch_weather():
+    return (sd.fetchWeather())
 
 t = threading.Thread(target=poll, daemon=True)
 t.start()

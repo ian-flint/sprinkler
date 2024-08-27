@@ -53,10 +53,22 @@ function showPanel (id) {
     if (id == "schedule_list") {
         showSchedule();
     }
+    if (id == "activity_log") {
+        showActivity();
+    }
 }
 
 
 var activeTimeout = 0;
+
+function showActivity() {
+     $.ajax({
+         type: "get",
+         url:  "/api/getlog",
+         }).done((data) => {
+             $("#activity_log").html(data);
+         });
+}
 
 function doStart() {
      var id = $(this).parent().parent().attr("id");

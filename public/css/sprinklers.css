@@ -19,3 +19,7 @@ tr {
 div#controls {
     min-width: max-content;
 }
+
+h2 {
+    font-size: 30;
+}
