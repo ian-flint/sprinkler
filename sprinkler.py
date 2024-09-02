@@ -27,6 +27,10 @@ def getLog ():
             blob = blob[-40:]
         return ("<br>".join(blob))
 
+@route ("/api/getqueue")
+def getQueue():
+    return sd.getQueue()
+
 def poll ():
     while True:
         sd.poll()

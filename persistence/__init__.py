@@ -8,10 +8,6 @@ import requests
 import calendar
 import statistics
 
-controller = RainbirdController(
-    os.environ["RAINBIRD_SERVER"], os.environ["RAINBIRD_PASSWORD"]
-)
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
@@ -20,6 +16,8 @@ formatter = logging.Formatter(
 )
 ch.setFormatter(formatter)
 logger.addHandler(ch)
+
+controller = RainbirdController(os.environ["RAINBIRD_SERVER"], os.environ["RAINBIRD_PASSWORD"])
 
 class SprinklerData:
     def __init__ (self):
@@ -30,8 +28,34 @@ class SprinklerData:
         self.mmrain = 0
         self.fetchWeather()
 
+    def getQueue (self):
+        ret = {}
+        if len(self.queue) > 0:
+            ret["queue"] = []
+            for line in self.queue:
+                ret["queue"].append([str(x) for x in line]);
+        if self.running:
+            remaining = self.running[1] - time.time()
+            ret["running"] = [str(self.running[0]), str(int(remaining/60)) + ":" + str(int(remaining%60)), str(self.running[2])]
+        return json.dumps(ret)
+
+
     def enqueue (self, station, duration, resumeIfInterrupted):
         logger.info ("Enqueuing station %d for duration %d, resume %s"%(station, duration, resumeIfInterrupted))
+        self.fetchWeather()
+        with open("sprinkler.log", "a") as f:
+            f.write ("Enqueuing station %d for duration %d, resume %s\n"%(station, duration, resumeIfInterrupted))
+        if self.hightemp > 85:
+            duration = duration * 1.5
+        if self.hightemp < 70:
+            duration = duration * 0.7
+        if self.mmrain > 30:
+            duration = duration * 0.5
+        if self.mmrain > 60:
+            duration = 0
+        logger.info ("Duration adjusted to %d due to weather"%(duration))
+        with open("sprinkler.log", "a") as f:
+            f.write ("Duration adjusted to %d due to weather\n"%(duration))
         self.queue.append([station, duration, resumeIfInterrupted])
 
     def runNow (self, station, duration):
@@ -52,7 +76,12 @@ class SprinklerData:
             with open("sprinkler.log", "a") as f:
                 f.write ("%s: Terminating current job\n"%(datetime.datetime.now()))
             self.running = None
-        logger.info("%s\n" % controller.stop_irrigation())
+        try:
+            logger.info("%s\n" % controller.stop_irrigation())
+        except:
+            logger.error("Error encountered stopping station")
+            with open("sprinkler.log", "a") as f:
+                f.write("Error encountered starting station")
 
     def poll (self):
         now = time.time()
@@ -74,14 +103,20 @@ class SprinklerData:
         if not self.running:
             if len(self.queue) > 0:
                 next = self.queue.pop(0)
+                logger.info ("Next zone: %s"%next)
                 seconds = int(next[1] * 60)
                 minutes = int(seconds / 60)
                 seconds = seconds % 60
                 logger.info ("Starting station %d for %d:%02d minutes, resume: %s"%(next[0], minutes, seconds, next[2]))
                 with open("sprinkler.log", "a") as f:
                     f.write("%s: Starting station %d for %d:%02d minutes, resume: %s\n"%(datetime.datetime.now(), next[0], minutes, seconds, next[2]))
-                logger.info("%s\n" % controller.stop_irrigation())
-                logger.info("%s\n" % controller.irrigate_zone(next[0], minutes))
+                try:
+                    logger.info("%s\n" % controller.stop_irrigation())
+                    logger.info("%s\n" % controller.irrigate_zone(next[0], minutes))
+                except:
+                    logger.error("Error encountered starting station")
+                    with open("sprinkler.log", "a") as f:
+                        f.write("Error encountered starting station")
                 self.running = [next[0], now + (60 * next[1]), next[2]]
 
     def fetchWeather (self):

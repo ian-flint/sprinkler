@@ -64,9 +64,45 @@ var activeTimeout = 0;
 function showActivity() {
      $.ajax({
          type: "get",
+         url:  "/api/getqueue",
+         }).done((data) => {
+             obj = JSON.parse(data);
+             if ("queue" in obj || "running" in obj) {
+                t = $("<table>");
+                tr = $("<tr>");
+                tr.append("<th>Station</th>");
+                tr.append("<th>Duration</th>");
+                tr.append("<th>Resume</th>");
+                t.append(tr)
+                if ("running" in obj) {
+                    tr = $("<tr>");
+                    tr.append($("<td>").html(obj["running"][0]));
+                    tr.append($("<td>").html(obj["running"][1]));
+                    tr.append($("<td>").html(obj["running"][2]));
+                    tr.append($("<td>").append($("<img src=images/x.svg>").on("click", doStop)));
+                    tr.children().css("color", "green");
+                    t.append(tr)
+                }
+                if ("queue" in obj) {
+                    for (ix in obj["queue"]) {
+                        line = obj["queue"][ix];
+                        tr = $("<tr>");
+                        tr.append($("<td>").html(line[0]));
+                        tr.append($("<td>").html(line[1]));
+                        tr.append($("<td>").html(line[2]));
+                        t.append(tr)
+                    }
+                }
+                $("#queue").html(t);
+             } else {
+                $("#queue").html("<b>idle</b>");
+             }
+         });
+     $.ajax({
+         type: "get",
          url:  "/api/getlog",
          }).done((data) => {
-             $("#activity_log").html(data);
+             $("#log").html(data);
          });
 }
 
@@ -101,7 +137,7 @@ function doStop() {
          type: "get",
          url:  "/api/stop",
          data: {"ts": Date.now()}
-         });
+         }).done(setTimeout(showActivity, 3000));
 }
 
 function showWaterNow() {
@@ -240,38 +276,33 @@ function showSchedule() {
                 }
                 tr.append($("<td>").attr("id", "saveCancel")
                                 .append($('<img src="images/trash.svg">').on("click", deleteSchedule)))
-                                .append($("<image src=images/check.svg>").on("click", () => {$(".editing").each(makeUneditable)}));
+                                .append($("<image src=images/check.svg>").on("click", () => {$(".editing").each(makeUneditable)}))
+                                .append($("<image src=images/play.svg>").on("click", enqueueItem));
                 t.append(tr);
             };
             t.append($("<tr>").append($("<td>").append($("<img src=images/plus.svg>").on("click", addSchedule))));
          });
 }
 
-function editSchedule() {
-    var cell = $(this).parent();
-    cell.parent().children(":not(#saveCancel)").each(makeEditable);
-    cell.html("")
-        .append($('<img src="images/check.svg">').on("click", updateSchedule))
-        .append($('<img src="images/x.svg">').on("click", uneditSchedule))
-        .append($('<img src="images/trash.svg">').on("click", deleteSchedule));
-}
-
-function updateSchedule() {
-    var obj = {};
-    var cell = $(this).parent();
-    cell.html("")
-            .append($('<img src="images/edit.svg">').on("click", editSchedule));
-    cell.siblings(":not(#last_seen)").each(makeUneditable).each((index, item)=>{
-        obj[$(item).attr("id")] = $(item).html();
+function enqueueItem() {
+    var row = $(this).parent();
+    var duration = 0;
+    var zoneid = 0;
+    row.children().each((id, element) => {
+        if ($(element).data("index") == 6) {
+            duration = $(element).data("value");
+        }
+        if ($(element).data("index") == 5) {
+            zoneid = $(element).data("value");
+        }
+    });
+    $.ajax({
+         type: "get",
+         url: "/api/enqueue",
+         data: {"id": zoneid, "time": duration}
     });
 }
 
-function uneditSchedule() {
-    var cell = $(this).parent();
-    cell.html("")
-            .append($('<img src="images/edit.svg">').on("click", editSchedule));
-    cell.siblings(":not(#last_seen)").each(rollback);
-}
 
 function deleteSchedule() {
     var row = $(this).parent().parent();

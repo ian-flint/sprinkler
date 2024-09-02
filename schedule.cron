@@ -18,3 +18,11 @@
 0 5 * * 4 /usr/bin/curl "http://10.0.0.241:8080/api/enqueue?id=12&time=30"
 #SPRINKLER # Rear Near Spray on Monday
 0 5 * * 1 /usr/bin/curl "http://10.0.0.241:8080/api/enqueue?id=7&time=15"
+#SPRINKLER # Front Parkway Spray on Monday
+0 5 * * 1 /usr/bin/curl "http://10.0.0.241:8080/api/enqueue?id=18&time=10"
+#SPRINKLER # Front Spray by House on Monday
+0 5 * * 1 /usr/bin/curl "http://10.0.0.241:8080/api/enqueue?id=16&time=10"
+#SPRINKLER # Front Right Spray on Monday
+0 5 * * 1 /usr/bin/curl "http://10.0.0.241:8080/api/enqueue?id=17&time=10"
+#SPRINKLER # Driveway Edge Spray on Monday
+0 5 * * 1 /usr/bin/curl "http://10.0.0.241:8080/api/enqueue?id=22&time=10"
