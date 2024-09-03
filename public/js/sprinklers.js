@@ -107,6 +107,7 @@ function showActivity() {
 }
 
 function doStart() {
+     $(this).css("opacity", 0).animate({"opacity": 1});;
      var id = $(this).parent().parent().attr("id");
      var time = $(this).val();
      if (time == "") {
@@ -128,6 +129,7 @@ function doStart() {
      }, time * 60 * 1000);
 }
 function doStop() {
+     $(this).css("opacity", 0).animate({"opacity": 1});;
      if (activeTimeout > 0) {
          clearTimeout (activeTimeout);
          activeTimeout = 0;
@@ -285,6 +287,7 @@ function showSchedule() {
 }
 
 function enqueueItem() {
+    $(this).css("opacity", 0).animate({"opacity": 1});;
     var row = $(this).parent();
     var duration = 0;
     var zoneid = 0;
