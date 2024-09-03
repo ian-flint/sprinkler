@@ -1,28 +1,6 @@
-zoneList = {
-    1: {"name": "Garden Box Bubblers"},
-    2: {"name": "Left Rear Garden Box"},
-    3: {"name": "Rear Right Idle (red)"},
-    4: {"name": "Rear Right Veg and Berm"},
-    5: {"name": "Rear Right Side (black)"},
-    6: {"name": "Left Far Planter Drip"},
-    7: {"name": "Rear Near Spray"},
-    8: {"name": "Rear Rose Garden"},
-    9: {"name": "Left Redwood Sprays"},
-    10: {"name": "Rear Far Sprays"},
-    11: {"name": "Hillside Trees (green)"},
-    12: {"name": "Rear Right Redwoods (blue)"},
-    16: {"name": "Front Spray by House"},
-    17: {"name": "Front Right Spray"},
-    18: {"name": "Front Parkway Spray"},
-    19: {"name": "Front Fence Spray"},
-    20: {"name": "Front Yard Left Drip"},
-    21: {"name": "Front Yard Right Drip"},
-    22: {"name": "Driveway Edge Spray"},
-    23: {"name": "Unused"},
-    24: {"name": "Unused"},
-};
+var zoneList = {}
 
-wdayList = {
+var wdayList = {
     0: {"name": "Sunday"},
     1: {"name": "Monday"},
     2: {"name": "Tuesday"},
@@ -32,21 +10,30 @@ wdayList = {
     6: {"name": "Saturday"},
 };
 
-selectChoices = {
+var selectChoices = {
     "zone": zoneList,
     "wday": wdayList,
 }
 
 $(document).ready(()=>{
-   $("#controls").tabs({
-                    activate: (event, ui) => {
-                        showPanel (ui.newPanel.attr("id"));
-                        },
-                    create: (event, ui) => {
-                        showPanel (ui.panel.attr("id"));
-                        },
-                   });
-   showWaterNow();
+    $("#controls").tabs({
+        activate: (event, ui) => {
+            showPanel (ui.newPanel.attr("id"));
+        },
+        create: (event, ui) => {
+            showPanel (ui.panel.attr("id"));
+        },
+    });
+ 
+    $.ajax({
+        type: "get",
+        url:  "/api/getstations",
+        }).done((data) => {
+            zoneList = JSON.parse(data);
+            selectChoices["zone"] = zoneList;
+            showWaterNow();
+        });
+    setInterval(doRefresh, 10000);
 });
 
 function showPanel (id) {
@@ -54,6 +41,13 @@ function showPanel (id) {
         showSchedule();
     }
     if (id == "activity_log") {
+        showActivity();
+    }
+}
+
+function doRefresh () {
+    var active = $( "#controls" ).tabs( "option", "active" );
+    if (active == 2) {
         showActivity();
     }
 }
@@ -139,7 +133,7 @@ function doStop() {
          type: "get",
          url:  "/api/stop",
          data: {"ts": Date.now()}
-         }).done(setTimeout(showActivity, 3000));
+         }).done(showActivity);
 }
 
 function showWaterNow() {
@@ -151,7 +145,7 @@ function showWaterNow() {
      tr = $("<tr>");
      tr.append($("<th>").html("Zone"));
      t.append (tr);
-     var keyList = Object.keys(zoneList).sort((a, b) => {return a - b});
+     var keyList = Object.keys(zoneList).sort((a, b) => {return parseInt(a) - parseInt(b)});
      for (var ix in keyList) {
         var key = keyList[ix];
         tr = $("<tr>");
@@ -176,6 +170,7 @@ function showWaterNow() {
 
 function saveSchedule() {
     $(".editing").each(makeUneditable);
+    $(this).css("opacity", 0).animate({"opacity": 1});;
     var t = $(this).siblings("table");
     var output = "";
     t.children().each((ix, tr) => {
@@ -215,7 +210,6 @@ function saveSchedule() {
          url: "/api/saveschedule",
          data: output
     }).done(() => {
-         alert ("Schedule Saved");
          showSchedule();
     });
 }

@@ -19,6 +19,10 @@ formatter = logging.Formatter(
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
+@route ("/api/getstations")
+def getStations ():
+    return (sd.getStations())
+
 @route ("/api/getlog")
 def getLog ():
     with open("sprinkler.log", 'r') as f:

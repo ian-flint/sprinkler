@@ -17,8 +17,6 @@ formatter = logging.Formatter(
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
-controller = RainbirdController(os.environ["RAINBIRD_SERVER"], os.environ["RAINBIRD_PASSWORD"])
-
 class SprinklerData:
     def __init__ (self):
         self.queue = []
@@ -27,6 +25,10 @@ class SprinklerData:
         self.hightemp = 70
         self.mmrain = 0
         self.fetchWeather()
+        with open("config.json") as f:
+            obj = json.loads(f.read())
+            self.controller = RainbirdController(obj["security"]["RAINBIRD_SERVER"], obj["security"]["RAINBIRD_PASSWORD"])
+            self.stations = obj["stations"]
 
     def getQueue (self):
         ret = {}
@@ -38,6 +40,9 @@ class SprinklerData:
             remaining = self.running[1] - time.time()
             ret["running"] = [str(self.running[0]), str(int(remaining/60)) + ":" + str(int(remaining%60)), str(self.running[2])]
         return json.dumps(ret)
+
+    def getStations (self):
+        return json.dumps(self.stations)
 
 
     def enqueue (self, station, duration, resumeIfInterrupted):
@@ -77,7 +82,7 @@ class SprinklerData:
                 f.write ("%s: Terminating current job\n"%(datetime.datetime.now()))
             self.running = None
         try:
-            logger.info("%s\n" % controller.stop_irrigation())
+            logger.error("%s\n" % self.controller.stop_irrigation())
         except:
             logger.error("Error encountered stopping station")
             with open("sprinkler.log", "a") as f:
@@ -111,8 +116,8 @@ class SprinklerData:
                 with open("sprinkler.log", "a") as f:
                     f.write("%s: Starting station %d for %d:%02d minutes, resume: %s\n"%(datetime.datetime.now(), next[0], minutes, seconds, next[2]))
                 try:
-                    logger.info("%s\n" % controller.stop_irrigation())
-                    logger.info("%s\n" % controller.irrigate_zone(next[0], minutes))
+                    logger.error("%s\n" % self.controller.stop_irrigation())
+                    logger.error("%s\n" % self.controller.irrigate_zone(next[0], minutes))
                 except:
                     logger.error("Error encountered starting station")
                     with open("sprinkler.log", "a") as f:
