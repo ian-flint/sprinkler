@@ -74,8 +74,7 @@ def saveschedule():
                     continue
                 selFields = [int(x) for x in fields[:2] + fields[4:]]
 #                print (selFields)
-                f.write ("%d %d * * %d /usr/bin/curl \"http://10.0.0.241:8080/api/enqueue?id=%d&time=%d\"\n"%tuple(selFields))
-    os.system ("/usr/bin/crontab -l | grep -v SPRINKLER | grep -v enqueue >> schedule.cron")
+                f.write ("%d %d * * %d /usr/bin/curl \"http://10.0.0.243:8080/api/enqueue?id=%d&time=%d\"\n"%tuple(selFields))
     os.system ("crontab schedule.cron")
     return ("OK")
 
@@ -108,5 +107,5 @@ def fetch_weather():
 t = threading.Thread(target=poll, daemon=True)
 t.start()
 
-run(host='10.0.0.241', port=8080, debug=True)
+run(host='0.0.0.0', port=8080, debug=True)
 

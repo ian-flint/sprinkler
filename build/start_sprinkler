@@ -1,0 +1,3 @@
+crontab ./schedule.cron
+/usr/sbin/cron -f > /var/log/cron &
+python ./sprinkler.py
