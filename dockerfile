@@ -7,9 +7,11 @@ RUN apt install -y cron
 RUN apt install -y systemd
 RUN ln -sf /usr/share/zoneinfo/PST8PDT /etc/localtime
 
-COPY . .
+EXPOSE 8080/tcp
+
+COPY ./build/ ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["./start_sprinkler"]
+CMD [ "bash", "./start_sprinkler" ]
 #CMD [ "bash" ]
 

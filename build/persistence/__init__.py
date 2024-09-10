@@ -25,7 +25,7 @@ class SprinklerData:
         self.hightemp = 70
         self.mmrain = 0
         self.fetchWeather()
-        with open("config.json") as f:
+        with open("etc/config.json") as f:
             obj = json.loads(f.read())
             self.controller = RainbirdController(obj["security"]["RAINBIRD_SERVER"], obj["security"]["RAINBIRD_PASSWORD"])
             self.stations = obj["stations"]

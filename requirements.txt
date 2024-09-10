@@ -1,4 +1,0 @@
-bottle == 0.12.25
-setuptools
-requests == 2.27.1
-pycrypto

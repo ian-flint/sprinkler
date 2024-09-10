@@ -33,4 +33,4 @@
 #SPRINKLER # Rear Right Redwoods (blue) on Tuesday
 0 5 * * 2 /usr/bin/curl "http://10.0.0.243:8080/api/enqueue?id=12&time=20"
 #SPRINKLER # Rear Right Redwoods (blue) on Saturday
-0 5 * * 6 /usr/bin/curl "http://10.0.0.243:8080/api/enqueue?id=12&time=20"
+15 5 * * 6 /usr/bin/curl "http://10.0.0.243:8080/api/enqueue?id=12&time=20"

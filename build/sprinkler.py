@@ -63,7 +63,7 @@ def saveschedule():
 #    print (request.body.read().decode("utf-8"))
 #    return ("OK")
     lines = request.body.read().decode("utf-8").split("\n")
-    with open("schedule.cron", "w") as f:
+    with open("etc/schedule.cron", "w") as f:
         for line in lines:
 #            print ("%s\n"%line)
             if line.find ("#") == 0: # comment line
@@ -75,13 +75,13 @@ def saveschedule():
                 selFields = [int(x) for x in fields[:2] + fields[4:]]
 #                print (selFields)
                 f.write ("%d %d * * %d /usr/bin/curl \"http://10.0.0.243:8080/api/enqueue?id=%d&time=%d\"\n"%tuple(selFields))
-    os.system ("crontab schedule.cron")
+    os.system ("crontab etc/schedule.cron")
     return ("OK")
 
 @route ("/api/getschedule")
 def getschedule ():
     obj = []
-    with open ("schedule.cron", "r") as f:
+    with open ("etc/schedule.cron", "r") as f:
         for line in f:
             if line.find("api/enqueue") < 0:
                 continue
