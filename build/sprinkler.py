@@ -54,8 +54,9 @@ def stop ():
 
 @route ("/api/enqueue")
 def enqueue ():
-    logger.info ("Enqueuing zone: ID=%s, Time=%s"%(request.query.id, request.query.time))
-    sd.enqueue (int(request.query.id), int(request.query.time), True)
+    logger.info ("Enqueuing zone: ID=%s, Time=%s, Skip=%s"%(request.query.id, request.query.time, request.query.skip))
+    if int(request.query.skip) == 0:
+        sd.enqueue (int(request.query.id), int(request.query.time), True)
     return ("Ok")
 
 @post ("/api/saveschedule")
@@ -65,7 +66,7 @@ def saveschedule():
     lines = request.body.read().decode("utf-8").split("\n")
     with open("etc/schedule.cron", "w") as f:
         for line in lines:
-#            print ("%s\n"%line)
+            print ("%s\n"%line)
             if line.find ("#") == 0: # comment line
                 f.write ("#SPRINKLER %s\n"%line)
             else:
@@ -74,7 +75,7 @@ def saveschedule():
                     continue
                 selFields = [int(x) for x in fields[:2] + fields[4:]]
 #                print (selFields)
-                f.write ("%d %d * * %d /usr/bin/curl \"http://10.0.0.243:8080/api/enqueue?id=%d&time=%d\"\n"%tuple(selFields))
+                f.write ("%d %d * * %d /usr/bin/curl \"http://10.0.0.243:8080/api/enqueue?id=%d&time=%d&skip=%s\"\n"%tuple(selFields))
     os.system ("crontab etc/schedule.cron")
     return ("OK")
 

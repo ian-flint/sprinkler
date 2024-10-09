@@ -191,6 +191,12 @@ function saveSchedule() {
                     }
                     array[0] = fields[1];
                     array[1] = fields[0];
+                } else if ($(td).attr("class") == "skip") {
+                    if ($(td).children("input").is(":checked")) {
+                        array[$(td).data("index")] = 1;
+                    } else {
+                        array[$(td).data("index")] = 0;
+                    }
                 } else {
                     array[$(td).data("index")] = $(td).data("value");
                 }
@@ -232,6 +238,7 @@ function showSchedule() {
             tr.append($("<th>").html("Weekday"));
             tr.append($("<th>").html("Zone"));
             tr.append($("<th>").html("Duration"));
+            tr.append($("<th>").html("Skip"));
             t.append (tr);
             for (var ix in obj) {
                 var data = obj[ix];
@@ -253,7 +260,7 @@ function showSchedule() {
                     if ((jx == 1) || (jx == 2) || (jx == 3)) {
                         continue;
                     }
-                    td = $("<td>").on("click", makeEditable);
+                    td = $("<td>");
                     td.data("value", (data[jx]));
                     td.data("index", jx);
                     if (jx == 0) {
@@ -265,8 +272,18 @@ function showSchedule() {
                     } else if (jx == 5) {
                         td.attr("class", "zone");
                         td.html(zoneList[data[jx]].name);
+                    } else if (jx == 7) {
+                        td.attr("class", "skip");
+                        cb = $("<input type=checkbox>");
+                        if (data[jx] > 0) {
+                            cb.attr("checked", data[jx]);
+                        }
+                        td.append(cb);
                     } else {
                         td.html(data[jx]);
+                    }
+                    if (jx != 7) {
+                        td.on("click", makeEditable);
                     }
                     tr.append(td);
                 }
@@ -312,7 +329,8 @@ function addSchedule() {
     tr.append($("<td class=time>").html("-").data("value", "5:00 AM").data("index", "0").on("click", makeEditable));
     tr.append($("<td class=wday>").html("-").data("value", "1").data("index", "4").on("click", makeEditable));
     tr.append($("<td class=zone>").html("-").data("value", "").data("index", "5").on("click", makeEditable));
-    tr.append($("<td>").html("-").data("value", "").data("index", "6").on("click", makeEditable));
+    tr.append($("<td>").html("1").data("value", "1").data("index", "6").on("click", makeEditable));
+    tr.append($("<td>").html("<input type=checkbox>").data("value", "").data("index", "7").attr("class", "skip"));
     tr.append($("<td>").attr("id", "saveCancel")
                        .append($('<img src="images/trash.svg">').on("click", deleteSchedule)));
     $(this).parent().parent().before(tr);
