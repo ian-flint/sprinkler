@@ -90,6 +90,7 @@ def getschedule ():
             url = fields.pop(5).strip('"')
             fields += [pair.split("=")[1] for pair in url.split("?")[1].split("&")]
             obj.append(fields)
+    obj.sort(key = lambda x: x[4] * 1000000 + x[1] * 10000 + x[0] * 100 + x[5])
     return (json.dumps(obj))
 
 @route ("/")
