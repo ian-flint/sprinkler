@@ -21,6 +21,7 @@ class SprinklerData:
     def __init__ (self):
         self.queue = []
         self.running = None
+        self.lastStation = None
         self.meantemp = 70
         self.hightemp = 70
         self.mmrain = 0
@@ -48,7 +49,7 @@ class SprinklerData:
     def enqueue (self, station, duration, resumeIfInterrupted):
         logger.info ("Enqueuing station %d for duration %d, resume %s"%(station, duration, resumeIfInterrupted))
         self.fetchWeather()
-        with open("sprinkler.log", "a") as f:
+        with open("etc/sprinkler.log", "a") as f:
             f.write ("Enqueuing station %d for duration %d, resume %s\n"%(station, duration, resumeIfInterrupted))
         if self.hightemp > 85:
             duration = duration * 1.5
@@ -59,7 +60,7 @@ class SprinklerData:
         if self.mmrain > 60:
             duration = 0
         logger.info ("Duration adjusted to %d due to weather"%(duration))
-        with open("sprinkler.log", "a") as f:
+        with open("etc/sprinkler.log", "a") as f:
             f.write ("Duration adjusted to %d due to weather\n"%(duration))
         self.queue.append([station, duration, resumeIfInterrupted])
 
@@ -78,14 +79,14 @@ class SprinklerData:
 
     def next (self):
         if self.running:
-            with open("sprinkler.log", "a") as f:
+            with open("etc/sprinkler.log", "a") as f:
                 f.write ("%s: Terminating current job\n"%(datetime.datetime.now()))
             self.running = None
         try:
             logger.error("%s\n" % self.controller.stop_irrigation())
         except:
             logger.error("Error encountered stopping station")
-            with open("sprinkler.log", "a") as f:
+            with open("etc/sprinkler.log", "a") as f:
                 f.write("Error encountered starting station")
 
     def poll (self):
@@ -95,7 +96,7 @@ class SprinklerData:
             end = self.running[1]
             if end < now:
                 logger.info ("Station %d done"%station)
-                with open("sprinkler.log", "a") as f:
+                with open("etc/sprinkler.log", "a") as f:
                     f.write ("%s: Station %d done\n"%(datetime.datetime.now(), station))
                 self.running = None
             else:
@@ -104,8 +105,17 @@ class SprinklerData:
                 seconds = seconds % 60
                 if (seconds % 60 == 0):
                     logger.info ("Station %d running - %d:%02d remaining"%(station, minutes, seconds))
+            if station != self.lastStation or self.lastStation == None:
+                self.lastStation = station
+                with open("etc/sprinkler.station.log", "a") as f:
+                    f.write("%d:%d\n"%(now, station))
                 
         if not self.running:
+            if self.lastStation != None:
+                self.lastStation = None
+                with open("etc/sprinkler.station.log", "a") as f:
+                    f.write("%d:Off\n"%(now))
+
             if len(self.queue) > 0:
                 next = self.queue.pop(0)
                 logger.info ("Next zone: %s"%next)
@@ -113,14 +123,14 @@ class SprinklerData:
                 minutes = int(seconds / 60)
                 seconds = seconds % 60
                 logger.info ("Starting station %d for %d:%02d minutes, resume: %s"%(next[0], minutes, seconds, next[2]))
-                with open("sprinkler.log", "a") as f:
+                with open("etc/sprinkler.log", "a") as f:
                     f.write("%s: Starting station %d for %d:%02d minutes, resume: %s\n"%(datetime.datetime.now(), next[0], minutes, seconds, next[2]))
                 try:
                     logger.error("%s\n" % self.controller.stop_irrigation())
                     logger.error("%s\n" % self.controller.irrigate_zone(next[0], minutes))
                 except:
                     logger.error("Error encountered starting station")
-                    with open("sprinkler.log", "a") as f:
+                    with open("etc/sprinkler.log", "a") as f:
                         f.write("Error encountered starting station")
                 self.running = [next[0], now + (60 * next[1]), next[2]]
 
@@ -137,9 +147,9 @@ class SprinklerData:
                 self.meantemp = obj["meantemp"]
                 self.hightemp = obj["hightemp"]
                 self.mmrain = obj["mmrain"]
-                with open("sprinkler.log", "a") as f2:
+                with open("etc/sprinkler.log", "a") as f2:
                     f2.write("%s\n"%obj)
-                with open("sprinkler.log", "a") as f:
+                with open("etc/sprinkler.log", "a") as f:
                     f.write("Fetched weather from cache: %s\n"%obj)
                 return obj
             
@@ -169,7 +179,7 @@ class SprinklerData:
         with open("weather.cache", "w") as f:
             f.write(json.dumps(obj))
         w = "High: %f, Mean: %f, Rain: %f"%(high, mean, mmrain)
-        with open("sprinkler.log", "a") as f:
+        with open("etc/sprinkler.log", "a") as f:
             f.write("Fetched weather from Internet: %s\n"%obj)
         return (obj)
 

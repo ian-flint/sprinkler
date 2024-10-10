@@ -25,7 +25,7 @@ def getStations ():
 
 @route ("/api/getlog")
 def getLog ():
-    with open("sprinkler.log", 'r') as f:
+    with open("etc/sprinkler.log", 'r') as f:
         blob = f.read().split("\n")
         if len(blob) > 40:
             blob = blob[-40:]
